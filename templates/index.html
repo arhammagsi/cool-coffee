@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cool Coffee Bar — coolcoffeebar.co</title>
+  <meta name="description" content="Cool Coffee Bar — coolcoffeebar.co — Bold brews, dark roasts, straight-up good. Karachi's favourite coffee bar. Home Delivery & Dine-in." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     BRANCH SELECTION OVERLAY
+══════════════════════════════════════════ -->
+<div id="overlay">
+  <div class="modal">
+    <div class="modal-logo-wrap">
+      <svg width="180" height="70" viewBox="0 0 180 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cup body -->
+        <path d="M 4 24 L 64 24 L 60 62 L 8 62 Z"
+              fill="none" stroke="#ff5200" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- Handle -->
+        <path d="M 64 30 C 80 30 80 56 64 56"
+              fill="none" stroke="#ff5200" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- Steam left -->
+        <path d="M 18 17 C 14 11 22 6 18 1"
+              fill="none" stroke="#ff5200" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Steam right -->
+        <path d="M 36 17 C 32 11 40 6 36 1"
+              fill="none" stroke="#ff5200" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="88" y="40" font-family="'Bebas Neue',sans-serif" font-size="26" fill="#f0ebe4" letter-spacing="2">Cool Coffee.</text>
+        <text x="89" y="56" font-family="'DM Sans',sans-serif" font-size="10" fill="#555" letter-spacing="3.5">COFFEE BAR</text>
+      </svg>
+    </div>
+
+    {% if user %}
+    <h2>Welcome back,</h2>
+    <h3>{{ user.name.upper() }} ☕</h3>
+    {% else %}
+    <h2>Welcome to</h2>
+    <h3>COOL COFFEE. ☕</h3>
+    {% endif %}
+    <p>Home delivery available! Select your nearest<br>branch and we'll deliver right to your door.</p>
+
+    <div class="pickup-badge">🛵 Home Delivery Available · All Branches</div>
+
+    <select class="branch-sel" id="branchSel" onchange="checkTime()">
+      <option value="">Select a Branch</option>
+      <option value="phase8">Phase 8 — R&amp;D Lab ✅</option>
+      <option value="bukhari">Bukhari ✅</option>
+      <option value="nn5star">NN 5 Star ✅</option>
+      <option value="johar">Johar ✅</option>
+      <option value="nnspar">NN Spar ✅</option>
+      <option value="malir">Malir ✅</option>
+      <option value="tipu">Tipu Sultan ✅</option>
+    </select>
+
+    <div class="closed-warn" id="closedWarn">
+      ⚠ Phase 8 is currently closed. Opens at 5:30 PM.
+    </div>
+
+    <button class="enter-btn" onclick="enterSite()">ENTER</button>
+
+    <!-- Auth links in modal -->
+    <div class="modal-auth">
+      {% if user %}
+        <span class="modal-auth-name">Logged in as <strong>{{ user.name }}</strong></span>
+        <a href="/logout" class="modal-auth-link">Log out</a>
+      {% else %}
+        <a href="#" class="modal-auth-link" onclick="openAuth('login')">Log In</a>
+        <span class="modal-auth-sep">·</span>
+        <a href="#" class="modal-auth-link" onclick="openAuth('register')">Create Account</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     AUTH MODAL (Login / Register)
+══════════════════════════════════════════ -->
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="closeAuth()">✕</button>
+
+    <!-- LOGIN PANEL -->
+    <div id="authLogin" class="auth-panel active">
+      <div class="auth-logo">☕</div>
+      <h3 class="auth-title">WELCOME BACK</h3>
+      <p class="auth-sub">Log in to your Cool Coffee account</p>
+      <div class="auth-error" id="loginError"></div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" />
+      </div>
+      <button class="auth-btn" onclick="doLogin()">LOGIN</button>
+      <p class="auth-switch">No account? <a href="#" onclick="switchAuth('register')">Create one →</a></p>
+    </div>
+
+    <!-- REGISTER PANEL -->
+    <div id="authRegister" class="auth-panel">
+      <div class="auth-logo">∞</div>
+      <h3 class="auth-title">JOIN COOL COFFEE</h3>
+      <p class="auth-sub">Create your Cool Coffee account</p>
+      <div class="auth-error" id="registerError"></div>
+      <div class="auth-field">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your name" />
+      </div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="your@email.com" />
+      </div>
+      <div class="auth-field">
+        <label>Phone (optional)</label>
+        <input type="text" id="regPhone" placeholder="03XX-XXXXXXX" />
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Min 6 characters" />
+      </div>
+      <button class="auth-btn" onclick="doRegister()">CREATE ACCOUNT</button>
+      <p class="auth-switch">Already have one? <a href="#" onclick="switchAuth('login')">Log in →</a></p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MAIN SITE
+══════════════════════════════════════════ -->
+<div id="site">
+
+  <!-- ── NAV ── -->
+  <nav id="nav">
+    <a href="#hero">
+      <svg width="105" height="42" viewBox="0 0 105 42" fill="none">
+        <!-- Cup body -->
+        <path d="M 2 14 L 36 14 L 34 36 L 4 36 Z"
+              fill="none" stroke="#ff5200" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"/>
+        <!-- Handle -->
+        <path d="M 36 18 C 46 18 46 32 36 32"
+              fill="none" stroke="#ff5200" stroke-width="3.4" stroke-linecap="round"/>
+        <!-- Steam left -->
+        <path d="M 10 9 C 8 6 13 3 10 1"
+              fill="none" stroke="#ff5200" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Steam right -->
+        <path d="M 22 9 C 20 6 25 3 22 1"
+              fill="none" stroke="#ff5200" stroke-width="2.5" stroke-linecap="round"/>
+        <text x="52" y="24" font-family="'Bebas Neue',sans-serif" font-size="16" fill="#f0ebe4" letter-spacing="1.5">Cool Coffee</text>
+        <text x="53" y="34" font-family="'DM Sans',sans-serif" font-size="7.5" fill="#444" letter-spacing="2.5">COFFEE BAR</text>
+      </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#menu">Menu</a></li>
+      <li><a href="#branches">Branches</a></li>
+
+      <li><a href="#hours">Hours</a></li>
+      <li><a href="#contact-section">Find Us</a></li>
+    </ul>
+    <div class="nav-right">
+      {% if user %}
+        <span class="nav-user">👤 {{ user.name }}</span>
+        <a href="/orders" class="nav-orders-btn">My Orders</a>
+        <a href="/logout" class="nav-logout">Log out</a>
+      {% else %}
+        <button class="nav-auth-btn" onclick="openAuth('login')">Log In</button>
+      {% endif %}
+      <button class="nav-cart-btn" onclick="openCart()">
+        🛒 Cart <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="nav-pickup" onclick="showModal()">Order Now</button>
+    </div>
+  </nav>
+
+  <!-- CART SIDEBAR -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <div class="cart-title">YOUR <span>CART</span></div>
+      <button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty" id="cartEmpty">
+        <div class="big">☕</div>
+        <p>Your cart is empty.<br>Add something delicious!</p>
+        <a onclick="closeCart()">Browse Menu →</a>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-subtotal">
+        <span id="cartItemCount">0 items</span>
+        <span></span>
+      </div>
+      <div class="cart-total">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-amount" id="cartTotal">Rs 0</span>
+      </div>
+      <label class="cart-branch-label">Delivery Branch</label>
+      <select class="cart-branch-sel" id="cartBranch">
+        <option value="Phase 8">Phase 8 — R&amp;D Lab ✅</option>
+        <option value="Bukhari">Bukhari ✅</option>
+        <option value="NN 5 Star">NN 5 Star ✅</option>
+        <option value="Johar">Johar ✅</option>
+        <option value="NN Spar">NN Spar ✅</option>
+        <option value="Malir">Malir ✅</option>
+        <option value="Tipu Sultan">Tipu Sultan ✅</option>
+      </select>
+      <textarea class="cart-notes-input" id="cartNotes" rows="2" placeholder="Any special requests? (optional)"></textarea>
+      <button class="checkout-btn" id="checkoutBtn" onclick="placeOrder()">PLACE ORDER</button>
+      <p class="cart-login-note" id="cartLoginNote" style="display:none">
+        <a onclick="closeCart(); openAuth('login')">Log in</a> or
+        <a onclick="closeCart(); openAuth('register')">register</a> to place an order
+      </p>
+    </div>
+  </div>
+
+  <!-- ORDER SUCCESS MODAL -->
+  <div class="order-success-overlay" id="orderSuccess">
+    <div class="order-success-box">
+      <div class="order-success-icon">✅</div>
+      <div class="order-success-title">ORDER PLACED!</div>
+      <p class="order-success-msg">Your order is confirmed. Our rider is on the way to deliver it to you!</p>
+      <div class="order-success-id" id="orderSuccessId">Order #—</div>
+      <button class="order-success-btn" onclick="closeOrderSuccess()">SWEET, THANKS!</button>
+    </div>
+  </div>
+
+  <!-- ── HERO ── -->
+  <section id="hero">
+    <div class="hero-ov"></div>
+    <div class="hero-content">
+      <div class="hero-eye"><div class="live-dot"></div>Now Open · Phase 8 R&amp;D Lab</div>
+      <h1 class="hero-h1">STAY IN THE<br><span class="hl">COOL.</span></h1>
+      <p class="hero-tag">Bold brews. Dark roasts. <strong>Straight-up good.</strong></p>
+      <div class="hero-btns">
+        <button class="btn-o"  onclick="goTo('#menu')">VIEW MENU</button>
+        <button class="btn-ol" onclick="goTo('#branches')">OUR BRANCHES</button>
+      </div>
+    </div>
+    <div class="hero-scroll" onclick="goTo('#mqband')">
+      <div class="scroll-ln"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ── MARQUEE ── -->
+  <div class="mqband" id="mqband">
+    <div class="mqtrack">
+      <div class="mqi">ESPRESSO<span class="mqd">✦</span></div>
+      <div class="mqi">COLD BREW<span class="mqd">✦</span></div>
+      <div class="mqi">SIGNATURE LATTES<span class="mqd">✦</span></div>
+      <div class="mqi">MATCHA<span class="mqd">✦</span></div>
+      <div class="mqi">WAFFLES<span class="mqd">✦</span></div>
+      <div class="mqi">DARK ROASTS<span class="mqd">✦</span></div>
+      <div class="mqi">HOME DELIVERY<span class="mqd">✦</span></div>
+      <div class="mqi">SPECIALTY CAKES<span class="mqd">✦</span></div>
+      <div class="mqi">ESPRESSO<span class="mqd">✦</span></div>
+      <div class="mqi">COLD BREW<span class="mqd">✦</span></div>
+      <div class="mqi">SIGNATURE LATTES<span class="mqd">✦</span></div>
+      <div class="mqi">MATCHA<span class="mqd">✦</span></div>
+      <div class="mqi">WAFFLES<span class="mqd">✦</span></div>
+      <div class="mqi">DARK ROASTS<span class="mqd">✦</span></div>
+      <div class="mqi">HOME DELIVERY<span class="mqd">✦</span></div>
+      <div class="mqi">SPECIALTY CAKES<span class="mqd">✦</span></div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- ── STAY BANNER ── -->
+  <div class="stay">
+    <svg width="36" height="28" viewBox="0 0 36 28" fill="none">
+      <!-- Cup body -->
+      <path d="M 2 11 L 26 11 L 24 26 L 4 26 Z"
+            fill="none" stroke="#f0ebe4" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- Handle -->
+      <path d="M 26 14 C 33 14 33 23 26 23"
+            fill="none" stroke="#f0ebe4" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- Steam -->
+      <path d="M 9 6 C 7 4 11 2 9 0"
+            fill="none" stroke="#f0ebe4" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 18 6 C 16 4 20 2 18 0"
+            fill="none" stroke="#f0ebe4" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <div class="stay-ln"></div>
+    <div class="stay-txt">stay in the <span>cool.</span></div>
+    <div class="stay-ln2"></div>
+  </div>
+
+  <!-- ── ABOUT ── -->
+  <section id="about">
+    <div class="about-g reveal">
+      <div class="about-t">
+        <p class="sec-lbl">Our Story</p>
+        <h2 class="sec-h2">NOT JUST<br>COFFEE.</h2>
+        <p>Cool Coffee was built around one obsession — <strong>what if a coffee shop never stopped surprising you?</strong> We source single-origin beans from Ethiopia, Colombia, and Indonesia, roasted in-house to unlock depth you didn't expect.</p>
+        <p>The name says it all. We want you to come back. Not because you have to — but because something here always pulls you in again. <strong>That's Cool Coffee.</strong></p>
+        <div class="stats">
+          <div class="st"><div class="st-n">15+</div><div class="st-l">Signature Drinks</div></div>
+          <div class="st"><div class="st-n">7</div><div class="st-l">Open Branches</div></div>
+          <div class="st"><div class="st-n">26K</div><div class="st-l">Followers</div></div>
+        </div>
+      </div>
+            <div class="about-ph">
+        <div style="width:100%;height:100%;min-height:340px;background:linear-gradient(145deg,#1a0800,#2a0d00);border-radius:20px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;border:1px solid var(--border)">
+          <div style="font-size:64px">☕</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--orange)">COOL COFFEE BAR</div>
+          <div style="font-size:11px;letter-spacing:3px;color:var(--gray)">KARACHI · SINCE 2025</div>
+        </div>
+        <div class="ab-badge">
+          <span style="font-size:9px">SINCE</span>
+          <span style="font-size:28px">2025</span>
+          <span style="font-size:9px">KARACHI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MENU ── -->
+  <section id="menu">
+    <div class="reveal">
+      <p class="sec-lbl">What We Serve</p>
+      <h2 class="sec-h2">THE MENU.</h2>
+    </div>
+    <div class="mtabs reveal">
+      <button class="tab on" onclick="switchTab(this,'hot')">☕ Hot</button>
+      <button class="tab"    onclick="switchTab(this,'cold')">🧊 Cold</button>
+      <button class="tab"    onclick="switchTab(this,'spec')">⭐ Specialties</button>
+      <button class="tab"    onclick="switchTab(this,'mat')">🍵 Matcha &amp; Tea</button>
+      <button class="tab"    onclick="switchTab(this,'food')">🥐 Food</button>
+      <button class="tab"    onclick="switchTab(this,'dess')">🍰 Desserts</button>
+    </div>
+
+    <!-- HOT DRINKS -->
+    <div class="mpanel on" id="hot"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Espresso</div><div class="mc-d">Single origin shot — intense, syrupy, crema</div><div class="mc-tags"><span class="mtag">STRONG</span><button class="mc-add" onclick="addToCart('Espresso', 280, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 280</div></div>
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Double Espresso</div><div class="mc-d">Two shots for those who mean business</div><div class="mc-tags"><span class="mtag">STRONG</span><button class="mc-add" onclick="addToCart('Double Espresso', 380, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 380</div></div>
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Flat White</div><div class="mc-d">Velvety microfoam over a double ristretto</div><div class="mc-tags"><span class="mtag">CLASSIC</span><button class="mc-add" onclick="addToCart('Flat White', 420, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 420</div></div>
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Cappuccino</div><div class="mc-d">Equal parts espresso, steamed milk &amp; foam<button class="mc-add" onclick="addToCart('Cappuccino', 390, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 390</div></div>
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Latte</div><div class="mc-d">Smooth espresso with steamed milk, silky finish<button class="mc-add" onclick="addToCart('Latte', 420, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 420</div></div>
+      <div class="mc"><div><div class="mc-ico">☕</div><div class="mc-n">Americano</div><div class="mc-d">Espresso &amp; hot water — bold and clean<button class="mc-add" onclick="addToCart('Americano', 320, '☕', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 320</div></div>
+      <div class="mc"><div><div class="mc-ico">🌙</div><div class="mc-n">Cool Signature Hot</div><div class="mc-d">Cardamom espresso, caramel &amp; milk foam</div><div class="mc-tags"><span class="mtag">SIGNATURE</span><span class="mtag">BESTSELLER</span><button class="mc-add" onclick="addToCart('Cool Signature Hot', 520, '🌙', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 520</div></div>
+      <div class="mc"><div><div class="mc-ico">🍫</div><div class="mc-n">Dark Mocha</div><div class="mc-d">70% dark chocolate, espresso &amp; steamed milk</div><div class="mc-tags"><span class="mtag">RICH</span><button class="mc-add" onclick="addToCart('Dark Mocha', 490, '🍫', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+    </div></div>
+
+    <!-- COLD -->
+    <div class="mpanel" id="cold"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">🧊</div><div class="mc-n">Cold Brew</div><div class="mc-d">18-hour slow steep — smooth, low acid</div><div class="mc-tags"><span class="mtag">SMOOTH</span><button class="mc-add" onclick="addToCart('Cold Brew', 480, '🧊', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 480</div></div>
+      <div class="mc"><div><div class="mc-ico">🧊</div><div class="mc-n">Nitro Cold Brew</div><div class="mc-d">Nitrogen-infused, creamy, zero sugar needed</div><div class="mc-tags"><span class="mtag">SIGNATURE</span><button class="mc-add" onclick="addToCart('Nitro Cold Brew', 560, '🧊', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 560</div></div>
+      <div class="mc"><div><div class="mc-ico">🧋</div><div class="mc-n">Iced Latte</div><div class="mc-d">Espresso over ice with cold oat or whole milk<button class="mc-add" onclick="addToCart('Iced Latte', 440, '🧋', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 440</div></div>
+      <div class="mc"><div><div class="mc-ico">🧋</div><div class="mc-n">Iced Caramel Latte</div><div class="mc-d">Salted caramel, espresso, iced milk</div><div class="mc-tags"><span class="mtag">POPULAR</span><button class="mc-add" onclick="addToCart('Iced Caramel Latte', 490, '🧋', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+      <div class="mc"><div><div class="mc-ico">🍊</div><div class="mc-n">Espresso Tonic</div><div class="mc-d">Chilled espresso, sparkling tonic, citrus</div><div class="mc-tags"><span class="mtag">REFRESHING</span><button class="mc-add" onclick="addToCart('Espresso Tonic', 510, '🍊', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 510</div></div>
+      <div class="mc"><div><div class="mc-ico">🧋</div><div class="mc-n">Cool Drift</div><div class="mc-d">Cold brew, tonic water, orange peel</div><div class="mc-tags"><span class="mtag">SIGNATURE</span><span class="mtag">UNIQUE</span><button class="mc-add" onclick="addToCart('Cool Drift', 540, '🧋', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 540</div></div>
+      <div class="mc"><div><div class="mc-ico">🧋</div><div class="mc-n">Very Vanilla Iced</div><div class="mc-d">House vanilla, cold milk, double espresso</div><div class="mc-tags"><span class="mtag">BESTSELLER</span><button class="mc-add" onclick="addToCart('Very Vanilla Iced', 470, '🧋', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 470</div></div>
+    </div></div>
+
+    <!-- SPECIALTIES -->
+    <div class="mpanel" id="spec"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">∞</div><div class="mc-n">Cool Infinity</div><div class="mc-d">Double espresso, black sesame, vanilla cream swirl</div><div class="mc-tags"><span class="mtag">FLAGSHIP</span><span class="mtag">MUST TRY</span><button class="mc-add" onclick="addToCart('Cool Infinity', 620, '∞', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 620</div></div>
+      <div class="mc"><div><div class="mc-ico">🔥</div><div class="mc-n">Red Eye</div><div class="mc-d">Drip coffee + double espresso — for the serious</div><div class="mc-tags"><span class="mtag">EXTRA STRONG</span><button class="mc-add" onclick="addToCart('Red Eye', 550, '🔥', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 550</div></div>
+      <div class="mc"><div><div class="mc-ico">🌙</div><div class="mc-n">Midnight Black</div><div class="mc-d">Activated charcoal latte, coconut milk, vanilla</div><div class="mc-tags"><span class="mtag">UNIQUE</span><button class="mc-add" onclick="addToCart('Midnight Black', 580, '🌙', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 580</div></div>
+      <div class="mc"><div><div class="mc-ico">🍯</div><div class="mc-n">Honey Lavender Latte</div><div class="mc-d">Lavender syrup, raw honey, espresso, oat milk</div><div class="mc-tags"><span class="mtag">FLORAL</span><button class="mc-add" onclick="addToCart('Honey Lavender Latte', 560, '🍯', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 560</div></div>
+      <div class="mc"><div><div class="mc-ico">🫐</div><div class="mc-n">Blue Velvet</div><div class="mc-d">Butterfly pea cold brew, lemon, tonic</div><div class="mc-tags"><span class="mtag">INSTA-WORTHY</span><button class="mc-add" onclick="addToCart('Blue Velvet', 580, '🫐', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 580</div></div>
+      <div class="mc"><div><div class="mc-ico">🍫</div><div class="mc-n">Cortado Oscuro</div><div class="mc-d">Equal ristretto &amp; warm dark chocolate milk<button class="mc-add" onclick="addToCart('Cortado Oscuro', 490, '🍫', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+    </div></div>
+
+    <!-- MATCHA -->
+    <div class="mpanel" id="mat"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">🍵</div><div class="mc-n">Matcha Latte</div><div class="mc-d">Ceremonial grade matcha, steamed oat milk</div><div class="mc-tags"><span class="mtag">POPULAR</span><button class="mc-add" onclick="addToCart('Matcha Latte', 490, '🍵', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+      <div class="mc"><div><div class="mc-ico">🍵</div><div class="mc-n">Iced Matcha</div><div class="mc-d">Cold oat milk, ceremonial matcha<button class="mc-add" onclick="addToCart('Iced Matcha', 510, '🍵', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 510</div></div>
+      <div class="mc"><div><div class="mc-ico">🍵</div><div class="mc-n">Dirty Matcha</div><div class="mc-d">Matcha latte with espresso shot on top</div><div class="mc-tags"><span class="mtag">BESTSELLER</span><button class="mc-add" onclick="addToCart('Dirty Matcha', 550, '🍵', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 550</div></div>
+      <div class="mc"><div><div class="mc-ico">🍑</div><div class="mc-n">Peach Oolong</div><div class="mc-d">Cold-brewed oolong, peach syrup, sparkling water<button class="mc-add" onclick="addToCart('Peach Oolong', 460, '🍑', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 460</div></div>
+      <div class="mc"><div><div class="mc-ico">🌹</div><div class="mc-n">Rose Chai</div><div class="mc-d">Karachi-style masala chai with dried rose petals</div><div class="mc-tags"><span class="mtag">DESI LOVE</span><button class="mc-add" onclick="addToCart('Rose Chai', 380, '🌹', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 380</div></div>
+    </div></div>
+
+    <!-- FOOD -->
+    <div class="mpanel" id="food"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">🥐</div><div class="mc-n">Butter Croissant</div><div class="mc-d">Flaky, layered, warm — baked fresh every morning</div><div class="mc-tags"><span class="mtag">FRESHLY BAKED</span><button class="mc-add" onclick="addToCart('Butter Croissant', 280, '🥐', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 280</div></div>
+      <div class="mc"><div><div class="mc-ico">🧇</div><div class="mc-n">Classic Waffles</div><div class="mc-d">Crispy outside, fluffy inside, maple syrup &amp; butter<button class="mc-add" onclick="addToCart('Classic Waffles', 590, '🧇', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 590</div></div>
+      <div class="mc"><div><div class="mc-ico">🧇</div><div class="mc-n">Nutella Waffles</div><div class="mc-d">Belgian waffle, warm Nutella, hazelnuts, berries</div><div class="mc-tags"><span class="mtag">POPULAR</span><button class="mc-add" onclick="addToCart('Nutella Waffles', 680, '🧇', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 680</div></div>
+      <div class="mc"><div><div class="mc-ico">🥪</div><div class="mc-n">Club Sandwich</div><div class="mc-d">Grilled chicken, cheese, lettuce, tomato<button class="mc-add" onclick="addToCart('Club Sandwich', 640, '🥪', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 640</div></div>
+      <div class="mc"><div><div class="mc-ico">🥑</div><div class="mc-n">Avocado Toast</div><div class="mc-d">Sourdough, smashed avo, chili flakes, poached egg</div><div class="mc-tags"><span class="mtag">HEALTHY</span><button class="mc-add" onclick="addToCart('Avocado Toast', 720, '🥑', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 720</div></div>
+      <div class="mc"><div><div class="mc-ico">🥞</div><div class="mc-n">Pancake Stack</div><div class="mc-d">3 fluffy pancakes, fresh fruit, honey drizzle<button class="mc-add" onclick="addToCart('Pancake Stack', 620, '🥞', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 620</div></div>
+    </div></div>
+
+    <!-- DESSERTS -->
+    <div class="mpanel" id="dess"><div class="mgrid">
+      <div class="mc"><div><div class="mc-ico">🎂</div><div class="mc-n">Cool Black Forest</div><div class="mc-d">Dark chocolate layers, kirsch cream, fresh cherries</div><div class="mc-tags"><span class="mtag">SIGNATURE</span><button class="mc-add" onclick="addToCart('Cool Black Forest', 490, '🎂', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+      <div class="mc"><div><div class="mc-ico">🍰</div><div class="mc-n">NY Cheesecake</div><div class="mc-d">Dense, creamy, biscuit base, berry coulis</div><div class="mc-tags"><span class="mtag">BESTSELLER</span><button class="mc-add" onclick="addToCart('NY Cheesecake', 450, '🍰', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 450</div></div>
+      <div class="mc"><div><div class="mc-ico">🍮</div><div class="mc-n">Crème Brûlée</div><div class="mc-d">Vanilla custard, torched sugar crust</div><div class="mc-tags"><span class="mtag">MUST TRY</span><button class="mc-add" onclick="addToCart('Crème Brûlée', 520, '🍮', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 520</div></div>
+      <div class="mc"><div><div class="mc-ico">🍫</div><div class="mc-n">Lava Cake</div><div class="mc-d">Molten dark chocolate, vanilla ice cream</div><div class="mc-tags"><span class="mtag">POPULAR</span><button class="mc-add" onclick="addToCart('Lava Cake', 560, '🍫', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 560</div></div>
+      <div class="mc"><div><div class="mc-ico">🍰</div><div class="mc-n">Tiramisu</div><div class="mc-d">Espresso-soaked, mascarpone, cocoa dusting<button class="mc-add" onclick="addToCart('Tiramisu', 490, '🍰', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 490</div></div>
+      <div class="mc"><div><div class="mc-ico">🍪</div><div class="mc-n">Warm Cookie</div><div class="mc-d">Double choc chip, freshly baked with cream<button class="mc-add" onclick="addToCart('Warm Cookie', 320, '🍪', this)">+ ADD TO CART</button></div></div><div class="mc-p">Rs 320</div></div>
+    </div></div>
+  </section>
+
+  <!-- ── BRANCHES ── -->
+  <section id="branches">
+    <div class="reveal">
+      <p class="sec-lbl">Where To Find Us</p>
+      <h2 class="sec-h2">OUR<br>BRANCHES.</h2>
+    </div>
+    <div class="branches-grid reveal">
+      <div class="branch-card">
+        <div class="branch-name">Phase 8 — R&amp;D Lab</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Our flagship branch. R&amp;D Lab — where new drinks are born. Home delivery available.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">Bukhari</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open in Bukhari. Come taste the cool.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">NN 5 Star</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open at NN 5 Star. Come find us.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">Johar</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open in Johar. Bold brews in your area.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">NN Spar</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open at NN Spar. We're right around the corner.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">Malir</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open in Malir. Dark roasts for everyone.</div>
+      </div>
+      <div class="branch-card">
+        <div class="branch-name">Tipu Sultan</div>
+        <div class="branch-status open"><div class="status-dot"></div>Open Now ✅</div>
+        <div class="branch-hours">⏰ 5:30 PM – 3:00 AM</div>
+        <div class="branch-note">Now open on Tipu Sultan Road. Come say hi.</div>
+      </div>
+      <div class="branch-card coming" style="border-style:dashed;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;min-height:140px">
+        <div style="font-size:32px">∞</div>
+        <div class="branch-name" style="font-size:16px;letter-spacing:3px;color:var(--mid)">…AND MANY MORE</div>
+        <div style="font-size:12px;color:var(--gray)">More branches on the way.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY REMOVED -->
+  <section id="gallery" style="display:none">
+    <div class="reveal">
+        <div class="gal-m reveal">
+      <div class="gi" style="background:linear-gradient(145deg,#1a0800,#3d1500);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+        <div style="font-size:42px">☕</div><div style="font-size:11px;letter-spacing:3px;color:var(--orange);font-weight:700">SIGNATURE LATTES</div>
+      </div>
+      <div class="gi" style="background:linear-gradient(145deg,#050505,#1a1200);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+        <div style="font-size:42px">🧊</div><div style="font-size:11px;letter-spacing:3px;color:var(--orange);font-weight:700">COLD BREW</div>
+      </div>
+      <div class="gi" style="background:linear-gradient(145deg,#1a0300,#2a0800);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+        <div style="font-size:42px">🌙</div><div style="font-size:11px;letter-spacing:3px;color:var(--orange);font-weight:700">NIGHT VIBES</div>
+      </div>
+      <div class="gi" style="background:linear-gradient(145deg,#0a1400,#0d1f00);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+        <div style="font-size:42px">🍵</div><div style="font-size:11px;letter-spacing:3px;color:var(--orange);font-weight:700">MATCHA SERIES</div>
+      </div>
+      <div class="gi" style="background:linear-gradient(145deg,#1a0800,#0d0d0d);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+        <div style="font-size:42px">✦</div><div style="font-size:11px;letter-spacing:3px;color:var(--orange);font-weight:700">THE VIBE</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOURS ── -->
+  <section id="hours">
+    <div class="reveal">
+      <p class="sec-lbl">Opening Hours</p>
+      <h2 class="sec-h2">WHEN WE'RE<br>OPEN.</h2>
+    </div>
+    <div class="hours-g reveal">
+      <div>
+        <div class="spill" id="spill">
+          <div id="spDot" style="width:8px;height:8px;border-radius:50%;flex-shrink:0"></div>
+          <span id="spTxt"></span>
+        </div>
+        <table class="htbl" id="htbl">
+          <tr><td>Monday</td>   <td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Tuesday</td>  <td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Wednesday</td><td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Thursday</td> <td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Friday</td>   <td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Saturday</td> <td>5:30 PM – 3:00 AM</td></tr>
+          <tr><td>Sunday</td>   <td>5:30 PM – 3:00 AM</td></tr>
+        </table>
+        <p style="font-size:12px;color:var(--gray);margin-top:18px;line-height:1.6">
+          * All branches: 5:30 PM – 3:00 AM daily. Home delivery available from all locations.
+        </p>
+      </div>
+
+      <div class="contact-card" id="contact">
+        <h3>FIND US</h3>
+        <div class="loc-row"><div class="loc-ic">📍</div><div class="loc-inf"><strong>Phase 8 — Flagship</strong>R&amp;D Lab, DHA Phase 8, Karachi</div></div>
+        <div class="loc-row"><div class="loc-ic">🌐</div><div class="loc-inf"><strong>Website</strong><a href="https://coolcoffeebar.co" style="color:var(--orange)">coolcoffeebar.co</a></div></div>
+        <div class="loc-row"><div class="loc-ic">📸</div><div class="loc-inf"><strong>Instagram</strong><a href="https://instagram.com/coolcoffeebar" style="color:var(--orange)">@coolcoffeebar</a></div></div>
+        <div class="loc-row"><div class="loc-ic">👥</div><div class="loc-inf"><strong>Followers</strong>26.2K and growing</div></div>
+        <div class="loc-row"><div class="loc-ic">🗺️</div><div class="loc-inf"><strong>Google Maps</strong><a href="https://maps.app.goo.gl/nQ5E3LsUutksnni48?g_st=ipc" target="_blank" style="color:var(--orange);font-size:12px">maps.app.goo.gl/nQ5E3LsUutksnni48</a></div></div>
+        <div class="hours-note">
+          <div class="label">Phase 8 Hours</div>
+          <div class="val">5:30 PM – 3:00 AM · Daily</div>
+          <div class="sub">Limited menu · More branches OTW</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CONTACT FORM ── -->
+  <section id="contact-section" style="background:var(--dark)">
+    <div class="reveal">
+      <p class="sec-lbl">Get In Touch</p>
+      <h2 class="sec-h2">SEND US<br>A MESSAGE.</h2>
+    </div>
+    <div class="contact-form-wrap reveal">
+      <div class="contact-success" id="contactSuccess">✅ Message sent! We'll be in touch soon.</div>
+      <div class="contact-error" id="contactError"></div>
+      <div class="cform-grid">
+        <div class="cform-field">
+          <label>Your Name</label>
+          <input type="text" id="cfName" placeholder="Ahmed Khan" />
+        </div>
+        <div class="cform-field">
+          <label>Email</label>
+          <input type="email" id="cfEmail" placeholder="ahmed@email.com" />
+        </div>
+        <div class="cform-field cform-full">
+          <label>Subject</label>
+          <input type="text" id="cfSubject" placeholder="Partnership, feedback, enquiry..." />
+        </div>
+        <div class="cform-field cform-full">
+          <label>Message</label>
+          <textarea id="cfMessage" rows="5" placeholder="Tell us anything..."></textarea>
+        </div>
+        <div class="cform-field cform-full">
+          <button class="btn-o" onclick="submitContact()">SEND MESSAGE</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="ft-g">
+      <div class="ft-brand">
+        <svg width="130" height="52" viewBox="0 0 130 52" fill="none">
+          <!-- Cup body -->
+          <path d="M 3 17 L 44 17 L 41 47 L 6 47 Z"
+                fill="none" stroke="#ff5200" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- Handle -->
+          <path d="M 44 22 C 56 22 56 42 44 42"
+                fill="none" stroke="#ff5200" stroke-width="4" stroke-linecap="round"/>
+          <!-- Steam left -->
+          <path d="M 13 10 C 10 6 16 3 13 1"
+                fill="none" stroke="#ff5200" stroke-width="3" stroke-linecap="round"/>
+          <!-- Steam right -->
+          <path d="M 26 10 C 23 6 29 3 26 1"
+                fill="none" stroke="#ff5200" stroke-width="3" stroke-linecap="round"/>
+          <text x="62" y="31" font-family="'Bebas Neue',sans-serif" font-size="20" fill="#f0ebe4" letter-spacing="1.5">Cool Coffee</text>
+          <text x="63" y="44" font-family="'DM Sans',sans-serif" font-size="8.5" fill="#444" letter-spacing="3">COFFEE BAR</text>
+        </svg>
+        <p>Bold brews. Dark roasts. Straight-up good. Cool Coffee Bar — Karachi's most obsessive coffee bar. 26.2K and still growing.</p>
+        <div class="socials">
+          <a class="soc" href="https://instagram.com/coolcoffeebar" target="_blank" title="Instagram">📸</a>
+          <div class="soc" title="Facebook">📘</div>
+          <div class="soc" title="TikTok">🎵</div>
+          <div class="soc" title="WhatsApp">💬</div>
+        </div>
+      </div>
+      <div class="ft-col">
+        <h4>Menu</h4>
+        <ul>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('hot'),400)">Hot Drinks</a></li>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('cold'),400)">Cold Drinks</a></li>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('spec'),400)">Specialties</a></li>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('mat'),400)">Matcha &amp; Tea</a></li>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('food'),400)">Food</a></li>
+          <li><a href="#menu" onclick="setTimeout(()=>switchTabById('dess'),400)">Desserts</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>Branches</h4>
+        <ul>
+          <li><a href="#branches">Phase 8 R&amp;D Lab ✅</a></li>
+          <li><a href="#branches">Bukhari 🚧</a></li>
+          <li><a href="#branches">NN 5 Star 🔜</a></li>
+          <li><a href="#branches">Johar 🔜</a></li>
+          <li><a href="#branches">NN Spar 🔜</a></li>
+          <li><a href="#branches">Malir 🔜</a></li>
+          <li><a href="#branches">Tipu Sultan 🔜</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <h4>Account</h4>
+        <ul>
+          {% if user %}
+          <li><a href="/orders">My Orders</a></li>
+          <li><a href="/logout">Log Out</a></li>
+          {% else %}
+          <li><a href="#" onclick="openAuth('login')">Log In</a></li>
+          <li><a href="#" onclick="openAuth('register')">Register</a></li>
+          {% endif %}
+          <li><a href="#about">About Cool Coffee</a></li>
+          <li><a href="#hours">Opening Hours</a></li>
+          <li><a href="#contact-section">Contact</a></li>
+          <li><a href="https://instagram.com/coolcoffeebar" target="_blank">Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bot">
+      <p>© 2025 Cool Coffee Bar — <strong>coolcoffeebar.co</strong> · All rights reserved.</p>
+      <p>Karachi, PK · <strong>Home Delivery Available</strong></p>
+    </div>
+  </footer>
+
+</div><!-- /site -->
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

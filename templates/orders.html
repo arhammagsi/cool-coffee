@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Orders — Cool Coffee Bar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+  <style>
+    body { background: var(--black); color: var(--white); padding: 0; min-height: 100vh; }
+
+    /* ── TOP NAV ── */
+    .o-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      padding: 18px 5vw;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(8,8,8,.97); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .o-nav-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+      letter-spacing: 3px; color: var(--white);
+    }
+    .o-nav-logo span { color: var(--orange); }
+    .o-nav-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--gray); font-size: 12px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      border: 1px solid var(--border); padding: 8px 18px; border-radius: 8px;
+      transition: all .2s;
+    }
+    .o-nav-back:hover { color: var(--white); border-color: var(--orange); }
+
+    /* ── MAIN WRAP ── */
+    .orders-wrap { max-width: 820px; margin: 0 auto; padding: 110px 5vw 80px; }
+
+    /* ── HEADER ── */
+    .orders-header { margin-bottom: 48px; border-bottom: 1px solid var(--border); padding-bottom: 28px; }
+    .orders-title  { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 1px; margin-bottom: 6px; }
+    .orders-sub    { color: var(--gray); font-size: 13px; }
+    .orders-count  {
+      display: inline-block; background: rgba(255,82,0,.1);
+      border: 1px solid rgba(255,82,0,.25); color: var(--orange);
+      padding: 4px 14px; border-radius: 60px; font-size: 11px;
+      font-weight: 700; letter-spacing: 2px; margin-top: 12px;
+    }
+
+    /* ── ORDER CARD ── */
+    .order-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px 26px; margin-bottom: 14px;
+      transition: border-color .2s;
+    }
+    .order-card:hover { border-color: rgba(255,82,0,.3); }
+
+    .order-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+    }
+    .order-id   { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--orange); }
+    .order-date { font-size: 11px; color: var(--gray); letter-spacing: 1px; margin-top: 3px; }
+
+    .order-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+    .order-branch {
+      font-size: 11px; color: var(--mid);
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      padding: 4px 12px; border-radius: 60px; letter-spacing: .5px;
+    }
+    .order-status {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 60px;
+    }
+    .order-status.pending  { background: rgba(255,200,0,.1); border: 1px solid rgba(255,200,0,.3); color: #ffd700; }
+    .order-status.ready    { background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); color: #4ade80; }
+    .order-status.delivered{ background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); color: #4ade80; }
+    .order-status.cancelled{ background: rgba(255,82,0,.1);   border: 1px solid rgba(255,82,0,.3);  color: var(--orange); }
+
+    /* ── ITEMS TABLE ── */
+    .order-items { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    .order-items tr { border-bottom: 1px solid rgba(255,255,255,.05); }
+    .order-items tr:last-child { border-bottom: none; }
+    .order-items td { padding: 8px 0; font-size: 13px; color: var(--mid); }
+    .order-items td:last-child { text-align: right; color: var(--white); font-weight: 600; }
+    .item-name { display: flex; align-items: center; gap: 8px; }
+    .item-qty  {
+      display: inline-block; background: rgba(255,82,0,.12);
+      border: 1px solid rgba(255,82,0,.2); color: var(--orange);
+      padding: 1px 7px; border-radius: 4px; font-size: 10px;
+      font-weight: 700; letter-spacing: 1px; margin-left: 6px;
+    }
+
+    /* ── NOTES ── */
+    .order-notes {
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: var(--gray); margin-bottom: 14px;
+    }
+
+    /* ── TOTAL ROW ── */
+    .order-total-row {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border); padding-top: 14px;
+    }
+    .order-total-lbl { font-size: 12px; color: var(--gray); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
+    .order-total-amt { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--orange); letter-spacing: 1px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center; padding: 80px 0; color: var(--gray);
+      border: 1px dashed var(--border); border-radius: 16px; margin-top: 24px;
+    }
+    .empty-icon  { font-size: 56px; margin-bottom: 16px; opacity: .4; }
+    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--mid); margin-bottom: 8px; }
+    .empty-sub   { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+    .empty-btn   {
+      display: inline-block; background: var(--orange); color: #fff;
+      padding: 12px 28px; border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 3px;
+      transition: background .2s;
+    }
+    .empty-btn:hover { background: var(--orange-dark); }
+
+    /* ── NOT LOGGED IN ── */
+    .login-required {
+      text-align: center; padding: 100px 20px;
+    }
+    .login-required .icon  { font-size: 52px; margin-bottom: 20px; }
+    .login-required h2     { font-family: 'Bebas Neue', sans-serif; font-size: 36px; margin-bottom: 10px; }
+    .login-required p      { color: var(--gray); font-size: 14px; margin-bottom: 28px; }
+    .login-required a      {
+      display: inline-block; background: var(--orange); color: #fff;
+      padding: 13px 32px; border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <div class="o-nav">
+    <div class="o-nav-logo">Cool <span>Coffee.</span></div>
+    <a href="/" class="o-nav-back">← Back to Menu</a>
+  </div>
+
+  <div class="orders-wrap">
+
+    {% if not session.get('user_id') %}
+    <!-- NOT LOGGED IN -->
+    <div class="login-required">
+      <div class="icon">🔒</div>
+      <h2>LOG IN TO SEE YOUR ORDERS</h2>
+      <p>You need to be logged in to view your order history.</p>
+      <a href="/">Go to Homepage & Log In</a>
+    </div>
+
+    {% else %}
+    <!-- LOGGED IN — show orders -->
+    <div class="orders-header">
+      <h1 class="orders-title">MY ORDERS</h1>
+      <p class="orders-sub">Your delivery history at Cool Coffee Bar</p>
+      {% if orders %}
+        <div class="orders-count">{{ orders|length }} ORDER{{ 's' if orders|length != 1 else '' }}</div>
+      {% endif %}
+    </div>
+
+    {% if orders %}
+      {% for order in orders %}
+      <div class="order-card">
+
+        <!-- Top row: ID + date | badges -->
+        <div class="order-top">
+          <div>
+            <div class="order-id">Order #{{ order.id }}</div>
+            <div class="order-date">🕐 {{ order.created_at[:16].replace('T', ' ') if 'T' in order.created_at else order.created_at[:16] }}</div>
+          </div>
+          <div class="order-badges">
+            <span class="order-branch">📍 {{ order.branch }}</span>
+            <span class="order-status {{ order.status if order.status else 'pending' }}">
+              {{ order.status.upper() if order.status else 'PENDING' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Items table -->
+        <table class="order-items">
+          {% for item in order.items %}
+          <tr>
+            <td>
+              <div class="item-name">
+                <span>{{ item.emoji if item.emoji else '☕' }}</span>
+                <span>{{ item.name }}</span>
+                <span class="item-qty">×{{ item.qty }}</span>
+              </div>
+            </td>
+            <td>Rs {{ (item.price * item.qty)|int }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+
+        <!-- Notes -->
+        {% if order.notes %}
+        <div class="order-notes">📝 {{ order.notes }}</div>
+        {% endif %}
+
+        <!-- Total -->
+        <div class="order-total-row">
+          <span class="order-total-lbl">Total Paid</span>
+          <span class="order-total-amt">Rs {{ order.total|int }}</span>
+        </div>
+
+      </div>
+      {% endfor %}
+
+    {% else %}
+    <!-- NO ORDERS YET -->
+    <div class="empty-state">
+      <div class="empty-icon">☕</div>
+      <div class="empty-title">NO ORDERS YET</div>
+      <p class="empty-sub">You haven't placed any orders yet. Go explore the menu!</p>
+      <a href="/#menu" class="empty-btn">VIEW MENU</a>
+    </div>
+    {% endif %}
+
+    {% endif %}
+  </div>
+
+</body>
+</html>

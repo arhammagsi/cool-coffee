@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin — Cool Coffee Bar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+  <style>
+    body { background:var(--black); color:var(--white); }
+    .admin-wrap { max-width:1100px; margin:0 auto; padding:60px 5vw; }
+    .admin-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:48px; }
+    .admin-title { font-family:'Bebas Neue',sans-serif; font-size:48px; letter-spacing:-1px; }
+    .admin-title span { color:var(--orange); }
+    .admin-back { color:var(--gray); font-size:12px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; }
+    .admin-back:hover { color:var(--orange); }
+
+    /* Login form */
+    .admin-login { max-width:380px; margin:120px auto; text-align:center; }
+    .admin-login h2 { font-family:'Bebas Neue',sans-serif; font-size:40px; margin-bottom:8px; }
+    .admin-login p { color:var(--gray); font-size:13px; margin-bottom:32px; }
+    .admin-login input { width:100%; background:#1a1a1a; border:1px solid var(--border); color:var(--white); padding:14px 18px; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; margin-bottom:16px; outline:none; }
+    .admin-login input:focus { border-color:var(--orange); }
+    .admin-login button { width:100%; background:var(--orange); border:none; color:#fff; padding:15px; border-radius:10px; font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:4px; cursor:pointer; }
+    .error-msg { color:var(--orange); font-size:12px; margin-bottom:16px; }
+
+    /* Stats row */
+    .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:48px; }
+    .stat-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px 28px; }
+    .stat-box .n { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--orange); line-height:1; }
+    .stat-box .l { font-size:11px; color:var(--gray); letter-spacing:2px; text-transform:uppercase; margin-top:4px; }
+
+    /* Tables */
+    .admin-section { margin-bottom:56px; }
+    .admin-section h3 { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; margin-bottom:20px; color:var(--mid); }
+    table { width:100%; border-collapse:collapse; }
+    th { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--gray); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border); }
+    td { font-size:13px; color:var(--mid); padding:12px 14px; border-bottom:1px solid #1a1a1a; vertical-align:top; }
+    td strong { color:var(--white); }
+    tr:hover td { background:rgba(255,82,0,.03); }
+    .badge { font-size:10px; padding:3px 10px; border-radius:60px; letter-spacing:1px; text-transform:uppercase; }
+    .badge.pending { background:rgba(255,200,0,.1); border:1px solid rgba(255,200,0,.2); color:#ffd700; }
+    .badge.unread  { background:rgba(255,82,0,.1);  border:1px solid rgba(255,82,0,.2);  color:var(--orange); }
+  </style>
+</head>
+<body>
+<div class="admin-wrap">
+
+  {% if not authed %}
+  <!-- LOGIN -->
+  <div class="admin-login">
+    <h2>ADMIN <span style="color:var(--orange)">LOGIN</span></h2>
+    <p>Cool Coffee Bar back-office</p>
+    {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
+    <form method="POST">
+      <input type="password" name="password" placeholder="Admin password" autofocus/>
+      <button type="submit">ENTER</button>
+    </form>
+  </div>
+
+  {% else %}
+  <!-- DASHBOARD -->
+  <div class="admin-header">
+    <div class="admin-title">LOOP. <span>ADMIN</span></div>
+    <a href="/" class="admin-back">← Back to site</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="n">{{ users|length }}</div><div class="l">Registered Users</div></div>
+    <div class="stat-box"><div class="n">{{ orders|length }}</div><div class="l">Total Orders</div></div>
+    <div class="stat-box"><div class="n">{{ contacts|length }}</div><div class="l">Messages Received</div></div>
+  </div>
+
+  <!-- Users -->
+  <div class="admin-section">
+    <h3>👤 USERS</h3>
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.id }}</td>
+          <td><strong>{{ u.name }}</strong></td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.phone or '—' }}</td>
+          <td>{{ u.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="text-align:center;color:var(--gray)">No users yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Orders -->
+  <div class="admin-section">
+    <h3>🛍 ORDERS</h3>
+    <table>
+      <thead><tr><th>#</th><th>Customer</th><th>Branch</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td><strong>{{ o.user_name }}</strong></td>
+          <td>{{ o.branch }}</td>
+          <td>
+            {% for item in o.items %}
+              <div>{{ item.name }} × {{ item.qty }}</div>
+            {% endfor %}
+          </td>
+          <td style="color:var(--orange);font-family:'Bebas Neue',sans-serif;font-size:18px">Rs {{ o.total }}</td>
+          <td><span class="badge {{ o.status }}">{{ o.status }}</span></td>
+          <td>{{ o.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:var(--gray)">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Contact Messages -->
+  <div class="admin-section">
+    <h3>✉️ MESSAGES</h3>
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Subject</th><th>Message</th><th>Time</th></tr></thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr>
+          <td>{{ c.id }}</td>
+          <td><strong>{{ c.name }}</strong></td>
+          <td>{{ c.email }}</td>
+          <td>{{ c.subject or '—' }}</td>
+          <td style="max-width:280px">{{ c.message[:100] }}{% if c.message|length > 100 %}…{% endif %}</td>
+          <td>{{ c.created_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:var(--gray)">No messages yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% endif %}
+</div>
+</body>
+</html>
